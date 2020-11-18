@@ -506,9 +506,11 @@ def run_experiment(args):
       best_reward = eval_reward
       if args.save_actor is not None:
         torch.save(algo.actor, args.save_actor)
+        print('Actor saved')
       
       if args.save_critic is not None:
         torch.save(algo.critic, args.save_critic)
+        print('Critic saved')
 
     if logger is not None:
       logger.add_scalar(args.env + '/kl', kl, timesteps)
