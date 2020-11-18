@@ -1,0 +1,4 @@
+
+        [console_scripts]
+        rex-gym=rex_gym.cli.entry_point:cli
+    
