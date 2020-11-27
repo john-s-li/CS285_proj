@@ -11,14 +11,17 @@ from torch.nn.utils.rnn import pad_sequence
 
 class ReplayBuffer():
   def __init__(self, state_dim, action_dim, max_size):
+
+    print('Init Replay')
     self.max_size     = int(max_size)
     self.state        = torch.zeros((self.max_size, state_dim))
     self.next_state   = torch.zeros((self.max_size, state_dim))
     self.action       = torch.zeros((self.max_size, action_dim))
     self.reward       = torch.zeros((self.max_size, 1))
     self.not_done     = torch.zeros((self.max_size, 1))
-    self.traj     = [0]
+    self.traj         = [0]
     self.size         = 1
+    print('Finish Init Replay')
 
   def push(self, state, action, next_state, reward, done):
     if self.size == self.max_size:
@@ -86,13 +89,16 @@ def collect_experience(policy, env, replay_buffer, state, steps, noise=0.2, max_
       if hasattr(policy, 'init_hidden_state'):
         policy.init_hidden_state()
 
-    replay_buffer.push(state, a, state_t1.astype(np.float32), r, done)
+    # replay_buffer.push(state, a, state_t1.astype(np.float32), r, done)
+    replay_buffer.push(state, a, state_t1, r, done)
 
     return state_t1, r, done
 
 def run_experiment(args):
   from policies.critic import FF_Q, LSTM_Q
   from policies.actor import FF_Stochastic_Actor, LSTM_Stochastic_Actor, FF_Actor, LSTM_Actor
+
+  print('In off-policy experiment')
 
   locale.setlocale(locale.LC_ALL, '')
 
@@ -102,13 +108,19 @@ def run_experiment(args):
   random.seed(args.seed)
   np.random.seed(args.seed)
   torch.manual_seed(args.seed)
+
   if hasattr(env, 'seed'):
     env.seed(args.seed)
 
   obs_space = env.observation_space.shape[0]
   act_space = env.action_space.shape[0]
 
+  print('Before Replay Buffer')
+  print(args.timesteps)
+
   replay_buff = ReplayBuffer(obs_space, act_space, args.timesteps)
+
+  print('After Replay')
 
   layers = [int(x) for x in args.layers.split(',')]
 
@@ -175,11 +187,13 @@ def run_experiment(args):
   update_steps = 0
   best_reward = None
 
+  print('Collecting prenormalize data for {} step'.format(args.prenormalize_steps))
   train_normalizer(algo.actor, args.prenormalize_steps, noise=algo.expl_noise)
 
   # Fill replay buffer, update policy until n timesteps have passed
   timesteps = 0
-  state = env.reset().astype(np.float32)
+  # state = env.reset().astype(np.float32)
+  state = env.reset()
   while timesteps < args.timesteps:
     buffer_ready = (algo.recurrent and replay_buff.trajectories > args.batch_size) or (not algo.recurrent and replay_buff.size > args.batch_size)
     warmup = timesteps < args.start_timesteps
