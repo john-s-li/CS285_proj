@@ -104,20 +104,25 @@ class Kinematics:
     def solve(self, orientation, position, frames=None):
         if frames is not None:
             self._frames = frames
+        print('Kinematics.py Line 107')
         foot_front_right = np.asarray([self._frames[0, 0], self._frames[0, 1], self._frames[0, 2]])
         foot_front_left = np.asarray([self._frames[1, 0], self._frames[1, 1], self._frames[1, 2]])
         foot_rear_right = np.asarray([self._frames[2, 0], self._frames[2, 1], self._frames[2, 2]])
         foot_rear_left = np.asarray([self._frames[3, 0], self._frames[3, 1], self._frames[3, 2]])
+        print('FL Foot Position = ', foot_front_left)
+
         # rotation vertices
         hip_front_right_vertex = self.transform(self._hip_front_right_v, orientation, position)
         hip_front_left_vertex = self.transform(self._hip_front_left_v, orientation, position)
         hip_rear_right_vertex = self.transform(self._hip_rear_right_v, orientation, position)
         hip_rear_left_vertex = self.transform(self._hip_rear_left_v, orientation, position)
+
         # leg vectors
         front_right_coord = foot_front_right - hip_front_right_vertex
         front_left_coord = foot_front_left - hip_front_left_vertex
         rear_right_coord = foot_rear_right - hip_rear_right_vertex
         rear_left_coord = foot_rear_left - hip_rear_left_vertex
+
         # leg vectors transformation
         inv_orientation = -orientation
         inv_position = -position
@@ -125,6 +130,7 @@ class Kinematics:
         t_front_left_coord = self.transform(front_left_coord, inv_orientation, inv_position)
         t_rear_right_coord = self.transform(rear_right_coord, inv_orientation, inv_position)
         t_rear_left_coord = self.transform(rear_left_coord, inv_orientation, inv_position)
+
         # solve IK
         front_right_angles = self._solve_IK(t_front_right_coord, self._hip, self._leg, self._foot, True)
         front_left_angles = self._solve_IK(t_front_left_coord, self._hip, self._leg, self._foot, False)
@@ -139,4 +145,5 @@ class Kinematics:
                                 [t_front_left[0], t_front_left[1], t_front_left[2]],
                                 [t_rear_right[0], t_rear_right[1], t_rear_right[2]],
                                 [t_rear_left[0], t_rear_left[1], t_rear_left[2]]])
+                                
         return front_right_angles, front_left_angles, rear_right_angles, rear_left_angles, t_frames
