@@ -106,7 +106,7 @@ class RexWalkEnv(rex_gym_env.RexGymEnv):
         }
         action_dim_map = {
             'ik': 2,
-            'ol': 8
+            'ol': 8 
         }
         action_dim = action_dim_map[self._signal_type]
         action_high = np.array([action_max[self._signal_type]] * action_dim)

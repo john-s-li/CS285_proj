@@ -16,6 +16,8 @@ from ..model import rex, motor, mark_constants, rex_constants
 from ..model.terrain import Terrain
 from ..util import bullet_client
 
+TOTAL_CYCLE_TIME = 0.3
+
 MOTOR_ANGLE_OBSERVATION_INDEX = 0
 OBSERVATION_EPS = 0.01
 RENDER_HEIGHT = 360
@@ -97,7 +99,8 @@ class RexGymEnv(gym.Env):
                  signal_type="ik",
                  terrain_type="plane",
                  terrain_id="plane",
-                 mark='base'):
+                 mark='base',
+                 ratio=0.5):
         """ Initialize the rex gym environment.
 
             Args:
@@ -156,6 +159,8 @@ class RexGymEnv(gym.Env):
             Raises:
               ValueError: If the urdf_version is not supported.
         """
+        self.ratio = ratio
+
         self.mark = mark
         self.num_motors = mark_constants.MARK_DETAILS['motors_num'][self.mark]
         self.motor_velocity_obs_index = MOTOR_ANGLE_OBSERVATION_INDEX + self.num_motors
@@ -173,19 +178,22 @@ class RexGymEnv(gym.Env):
         # PD control needs smaller time step for stability.
         if control_time_step is not None:
             self.control_time_step = control_time_step
-            self._action_repeat = action_repeat
-            self._time_step = control_time_step / action_repeat
+            self.action_repeat = action_repeat
+            self.time_step = control_time_step / action_repeat
         else:
             # Default values for time step and action repeat
             if accurate_motor_model_enabled or pd_control_enabled:
-                self._time_step = 0.002
-                self._action_repeat = 5
+                self.time_step = 0.002
+                self.action_repeat = 5
             else:
-                self._time_step = 0.01
-                self._action_repeat = 1
-            self.control_time_step = self._time_step * self._action_repeat
+                self.time_step = 0.01
+                self.action_repeat = 1
+            self.control_time_step = self.time_step * self.action_repeat
         # TODO: Fix the value of self._num_bullet_solver_iterations.
-        self._num_bullet_solver_iterations = int(NUM_SIMULATION_ITERATION_STEPS / self._action_repeat)
+
+        self.cycle_len = int(TOTAL_CYCLE_TIME/self.time_step)
+
+        self._num_bullet_solver_iterations = int(NUM_SIMULATION_ITERATION_STEPS / self.action_repeat)
         self._urdf_root = urdf_root
         self._self_collision_enabled = self_collision_enabled
         self._motor_velocity_limit = motor_velocity_limit
@@ -284,6 +292,7 @@ class RexGymEnv(gym.Env):
         action_high = np.array([self._action_bound] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high)
         self.observation_space = spaces.Box(observation_low, observation_high)
+
         self.viewer = None
         self._hard_reset = hard_reset  # This assignment need to be after reset()
         self.env_goal_reached = False
@@ -309,7 +318,7 @@ class RexGymEnv(gym.Env):
             self._pybullet_client.resetSimulation()
             self._pybullet_client.setPhysicsEngineParameter(
                 numSolverIterations=int(self._num_bullet_solver_iterations))
-            self._pybullet_client.setTimeStep(self._time_step)
+            self._pybullet_client.setTimeStep(self.time_step)
             self._ground_id = self._pybullet_client.loadURDF("%s/plane.urdf" % self._urdf_root)
             if self._reflection:
                 self._pybullet_client.changeVisualShape(self._ground_id, -1, rgbaColor=[1, 1, 1, 0.8])
@@ -323,9 +332,9 @@ class RexGymEnv(gym.Env):
             else:
                 self.rex = (REX_URDF_VERSION_MAP[self._urdf_version](
                     pybullet_client=self._pybullet_client,
-                    action_repeat=self._action_repeat,
+                    action_repeat=self.action_repeat,
                     urdf_root=self._urdf_root,
-                    time_step=self._time_step,
+                    time_step=self.time_step,
                     self_collision_enabled=self._self_collision_enabled,
                     motor_velocity_limit=self._motor_velocity_limit,
                     pd_control_enabled=self._pd_control_enabled,
@@ -388,6 +397,7 @@ class RexGymEnv(gym.Env):
           ValueError: The action dimension is not the same as the number of motors.
           ValueError: The magnitude of actions is out of bounds.
         """
+        
         self._last_base_position = self.rex.GetBasePosition()
         self._last_base_orientation = self.rex.GetBaseOrientation()
         if self._is_render:
@@ -550,7 +560,7 @@ class RexGymEnv(gym.Env):
         # shake_reward = -abs(observation[4])
         energy_reward = -np.abs(
             np.dot(self.rex.GetMotorTorques(),
-                   self.rex.GetMotorVelocities())) * self._time_step
+                   self.rex.GetMotorVelocities())) * self.time_step
         objectives = [forward_reward, energy_reward, drift_reward, shake_reward]
         weighted_objectives = [o * w for o, w in zip(objectives, self._objective_weights)]
         reward = sum(weighted_objectives)
@@ -669,13 +679,13 @@ class RexGymEnv(gym.Env):
         if control_step < simulation_step:
             raise ValueError("Control step should be larger than or equal to simulation step.")
         self.control_time_step = control_step
-        self._time_step = simulation_step
-        self._action_repeat = int(round(control_step / simulation_step))
-        self._num_bullet_solver_iterations = (NUM_SIMULATION_ITERATION_STEPS / self._action_repeat)
+        self.time_step = simulation_step
+        self.action_repeat = int(round(control_step / simulation_step))
+        self._num_bullet_solver_iterations = (NUM_SIMULATION_ITERATION_STEPS / self.action_repeat)
         self._pybullet_client.setPhysicsEngineParameter(
             numSolverIterations=self._num_bullet_solver_iterations)
-        self._pybullet_client.setTimeStep(self._time_step)
-        self.rex.SetTimeSteps(action_repeat=self._action_repeat, simulation_step=self._time_step)
+        self._pybullet_client.setTimeStep(self.time_step)
+        self.rex.SetTimeSteps(action_repeat=self.action_repeat, simulation_step=self.time_step)
 
     @property
     def pybullet_client(self):
@@ -692,3 +702,5 @@ class RexGymEnv(gym.Env):
     @property
     def env_step_counter(self):
         return self._env_step_counter
+
+

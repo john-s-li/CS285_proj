@@ -5,8 +5,10 @@ import numpy as np
 
 from rex_gym.envs.rex_gym_env import RexGymEnv
 from rex_gym.envs.gym.standup_env import RexStandupEnv
+from rex_gym.envs.gym.walk_env import RexWalkEnv
+from rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
-env = RexStandupEnv(terrain_id='plane', render=True) 
+env = rexPeriodicRewardEnv(terrain_id='plane', render=False) 
 p = env.rex._pybullet_client
 model_id = env.rex.quadruped
 print('model ID: ', model_id)
@@ -130,12 +132,10 @@ toe_pos = { 'front_left_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['fr
         }       
 
 time = 0
-action = env.action_space.sample()
-for _ in range(1000):
-    ob, re, done, ac = env.step([0]) # take a random action
-    time += env._time_step
-    print('Sim time t = ', time)
-    print_contact_info()
-    print_toe_velocities(toe_pos)
+for _ in range(10000):
+    ob, re, done, ac = env.step(env.action_space.sample()) # take a random action
+    #print(ac)
+    #print_contact_info()
+    #print_toe_velocities(toe_pos)
 
 env.close()

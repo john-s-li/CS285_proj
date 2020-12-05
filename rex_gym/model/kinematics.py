@@ -104,12 +104,12 @@ class Kinematics:
     def solve(self, orientation, position, frames=None):
         if frames is not None:
             self._frames = frames
-        print('Kinematics.py Line 107')
+        #print('Kinematics.py Line 107')
         foot_front_right = np.asarray([self._frames[0, 0], self._frames[0, 1], self._frames[0, 2]])
         foot_front_left = np.asarray([self._frames[1, 0], self._frames[1, 1], self._frames[1, 2]])
         foot_rear_right = np.asarray([self._frames[2, 0], self._frames[2, 1], self._frames[2, 2]])
         foot_rear_left = np.asarray([self._frames[3, 0], self._frames[3, 1], self._frames[3, 2]])
-        print('FL Foot Position = ', foot_front_left)
+        #print('FL Foot Position = ', foot_front_left)
 
         # rotation vertices
         hip_front_right_vertex = self.transform(self._hip_front_right_v, orientation, position)
