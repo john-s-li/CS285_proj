@@ -418,10 +418,10 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         """
             returns the clock input info for policy conditioning for 4 legs
         """
-        return [np.sin(2*np.pi*(self.phase + self.theta_FL)/self.cycle_len),
-                np.sin(2*np.pi*(self.phase + self.theta_FR)/self.cycle_len),
-                np.sin(2*np.pi*(self.phase + self.theta_RL)/self.cycle_len),
-                np.sin(2*np.pi*(self.phase + self.theta_RR)/self.cycle_len)
+        return [np.sin(2*np.pi*(self.phase/self.cycle_len + self.theta_FL)/self.cycle_len),
+                np.sin(2*np.pi*(self.phase/self.cycle_len + self.theta_FR)/self.cycle_len),
+                np.sin(2*np.pi*(self.phase/self.cycle_len + self.theta_RL)/self.cycle_len),
+                np.sin(2*np.pi*(self.phase/self.cycle_len + self.theta_RR)/self.cycle_len)
         ]
 
 
