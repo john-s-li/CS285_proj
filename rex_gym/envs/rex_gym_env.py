@@ -292,7 +292,7 @@ class RexGymEnv(gym.Env):
         action_high = np.array([self._action_bound] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high)
         self.observation_space = spaces.Box(observation_low, observation_high)
-
+        print(self.observation_space)
         self.viewer = None
         self._hard_reset = hard_reset  # This assignment need to be after reset()
         self.env_goal_reached = False

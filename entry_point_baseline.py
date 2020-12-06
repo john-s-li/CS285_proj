@@ -17,13 +17,15 @@ from stable_baselines.ddpg.noise import NormalActionNoise, OrnsteinUhlenbeckActi
 from rex_gym.envs.rex_gym_env import RexGymEnv
 from rex_gym.envs.gym.walk_env import RexWalkEnv
 
-use_PPO = False
-use_TD3 = True
+from rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
-env = RexGymEnv(render=False, signal_type='ol')
-env = DummyVecEnv([lambda: env])
+use_PPO = True
+use_TD3 = False
+
+env = rexPeriodicRewardEnv(render=False)
+# env = DummyVecEnv([lambda: env])
 # check to see that rex_gym is compatible with baselines
-# check_env(env) 
+check_env(env) 
 
 # Make parallel environments of rex
 n_envs = 1
@@ -49,17 +51,17 @@ if use_PPO:
                 nminibatches=n_envs*1, # number of training minibatches per update. For recurrent policies, the number of environments run in parallel should be a multiple of nminibatches.
                 noptepochs=10, # number of epoch when optimizing the surrogate
                 cliprange=0.2, # this is epsilon for L_clip in PPO paper
-                tensorboard_log='tb_logs/',
+                tensorboard_log='PPO_periodic_reward_logs/',
                 verbose=1, # the verbosity level: 0 none, 1 training information, 2 tensorflow debug
                 seed=0)
 
     # Use deterministic actions for evaluation
     eval_callback = EvalCallback(env, 
-                                best_model_save_path='PPO2_model_logs/',
-                                log_path='PPO2_logs_1/', eval_freq=500,
+                                best_model_save_path='PPO2_periodic_reward_model_logs/',
+                                log_path='PPO2_periodic_reward_logs_1/', eval_freq=500,
                                 deterministic=True, render=False)
 
-    model.learn(total_timesteps=int(1e9), callback=eval_callback, log_interval=10,) # Try a billion learning steps
+    model.learn(total_timesteps=int(1e9), callback=eval_callback, log_interval=100) # Try a billion learning steps
 
     model.save("ppo2_rex_1_billion") # save the last model in training
 

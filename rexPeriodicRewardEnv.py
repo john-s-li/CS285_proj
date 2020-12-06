@@ -219,7 +219,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         if done:
             self.rex.Terminate()
 
-        return np.array(self._get_observation()), reward, done, {'action': action}
+        return np.array(self._get_observation_np()), reward, done, {'action': action}
 
 
     def reset(self):
@@ -235,31 +235,31 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         # Clock reward -----------------------------------------------------------------
         A, B = self.get_von_mises(0.0, self.ratio, self.kappa)
         phi = self.phase / self.cycle_len
-        print('Cycles completed = ', self.cycle_complete)
+        #print('Cycles completed = ', self.cycle_complete)
 
-        print('A, B = ', (A,B))
+        #print('A, B = ', (A,B))
 
         phi_FL = self.wrap(phi + self.theta_FL)
         phi_FR = self.wrap(phi + self.theta_FR)
         phi_RL = self.wrap(phi + self.theta_RL)
         phi_RR = self.wrap(phi + self.theta_RR)
 
-        print(phi_FL)
-        print(phi_FR)
-        print(phi_RL)
-        print(phi_RR)
+        #print(phi_FL)
+        #print(phi_FR)
+        #print(phi_RL)
+        #print(phi_RR)
 
         FL_swing = self.in_swing(A, B, phi_FL)
         FR_swing = self.in_swing(A, B, phi_FR)
         RL_swing = self.in_swing(A, B, phi_RL)
         RR_swing = self.in_swing(A, B, phi_RR)
 
-        print('Time since reset = ', self.rex.GetTimeSinceReset())
-        print('phase phi = ', phi)
-        print('FL swing = ', FL_swing)
-        print('FR swing = ', FR_swing)
-        print('RL swing = ', RL_swing)
-        print('RR swing = ', RR_swing)
+        #print('Time since reset = ', self.rex.GetTimeSinceReset())
+        #print('phase phi = ', phi)
+        #print('FL swing = ', FL_swing)
+        #print('FR swing = ', FR_swing)
+        #print('RL swing = ', RL_swing)
+        #print('RR swing = ', RR_swing)
 
         if FL_swing:
             c_swing_frc_FL = 1
