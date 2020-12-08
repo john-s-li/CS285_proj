@@ -292,7 +292,7 @@ class RexGymEnv(gym.Env):
         action_high = np.array([self._action_bound] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high)
         self.observation_space = spaces.Box(observation_low, observation_high)
-        print(self.observation_space)
+        
         self.viewer = None
         self._hard_reset = hard_reset  # This assignment need to be after reset()
         self.env_goal_reached = False
@@ -511,7 +511,8 @@ class RexGymEnv(gym.Env):
         # get base position
         base_pos = self.rex.GetBasePosition() # I will assume [x, y, z]
 
-        return np.dot(np.asarray([0, 0, 1]), np.asarray(local_up)) < 0.85 or base_pos[-1] < 0.13
+        return (np.dot(np.asarray([0, 0, 1]), np.asarray(local_up)) < 0.85 
+                or base_pos[-1] < 0.13 or base_pos[-1] > 0.25) # don't want Rex to jump either
 
     def _termination(self):
         # if self.is_fallen():

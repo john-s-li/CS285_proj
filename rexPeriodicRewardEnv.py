@@ -86,7 +86,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         self._gait_type = gait_type        
         # for observation space bounding 
         self.max_speed = 1.0
-        self.min_speed = 0.0
+        self.min_speed = 0.2
         
         self.min_side_speed = -0.3
         self.max_side_speed =  0.3
@@ -129,8 +129,11 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                              terrain_id=terrain_id,
                              terrain_type=terrain_type,
                              mark=mark,
-                             ratio=self.ratio
+                             ratio=self.ratio,
+                             forward_reward_cap=5
                             )
+
+        self.height_des = 0.206 # this is init standing height for rex
 
         self.cycle_complete = 0
         self.cycle_len = 1000 # this is L
@@ -238,7 +241,6 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         """
             Updated reward function with periodic reward composition
         """
-
         # Clock reward -----------------------------------------------------------------
         A, B = self.get_von_mises(0.0, self.ratio, self.kappa)
         phi = self.phase / self.cycle_len
@@ -307,6 +309,13 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         foot_penalties = FL_penalty + FR_penalty + RL_penalty + RR_penalty
   
         # Deviation Penalties ----------------------------------------------------------
+        # Base height
+        base_height = self.rex.GetBasePosition()[-1]
+        height_err = np.abs(base_height - self.height_des)
+    
+        if height_err < 0.02:
+            height_err = 0
+
         # Speed 
         vx, vy, _ = p.getBaseVelocity(bodyUniqueId=self.rex.quadruped)[0]
         x_vel_err = 4*np.abs(vx - self.speed) # higher emphasis on x velocity error
@@ -326,11 +335,12 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         accel_penalty = 0.15 * np.abs(a_trans.sum() + a_rot.sum())
 
         reward = 0.000 + \
-                 0.250 * np.exp(-orient_err) +  \
-                 0.300 * np.exp(-foot_penalties) +  \
-                 0.200 * np.exp(-x_vel_err)    +  \
-                 0.100 * np.exp(-y_vel_err)    +  \
-                 0.125 * np.exp(-accel_penalty)   +  \
+                 0.250 * np.exp(-orient_err)     +  \
+                 0.225 * np.exp(-foot_penalties) +  \
+                 0.075 * np.exp(-height_err)     +  \
+                 0.200 * np.exp(-x_vel_err)      +  \
+                 0.100 * np.exp(-y_vel_err)      +  \
+                 0.125 * np.exp(-accel_penalty)  +  \
                  0.025 * np.exp(-energy_penalty)
 
         return reward
