@@ -4,7 +4,7 @@ import gym
 import tensorflow as tf
 import numpy as np
 
-from stable_baselines.common.policies import MlpPolicy, MlpLstmPolicy, MlpLnLstmPolicy
+from stable_baselines.common.policies import MlpPolicy, MlpLstmPolicy, MlpLnLstmPolicy, LstmPolicy
 from stable_baselines.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines.common.env_checker import check_env
 from stable_baselines.common import make_vec_env
@@ -25,7 +25,7 @@ use_TD3 = False
 env = rexPeriodicRewardEnv(render=False)
 # env = DummyVecEnv([lambda: env])
 # check to see that rex_gym is compatible with baselines
-check_env(env) 
+#check_env(env) 
 
 # Make parallel environments of rex
 n_envs = 1
@@ -38,6 +38,9 @@ n_envs = 1
 
 # use PPO2 for use of recurrent policies to combat partial observability
 if use_PPO:
+
+    policy_kwargs = dict(layers=[256, 256])
+
     print('Running Rex with PPO2 \n')
     model = PPO2(MlpLstmPolicy, # policy
                 env, 
@@ -53,15 +56,16 @@ if use_PPO:
                 cliprange=0.2, # this is epsilon for L_clip in PPO paper
                 tensorboard_log='PPO_periodic_reward_logs/',
                 verbose=1, # the verbosity level: 0 none, 1 training information, 2 tensorflow debug
-                seed=0)
+                seed=0,
+                policy_kwargs=policy_kwargs)
 
     # Use deterministic actions for evaluation
     eval_callback = EvalCallback(env, 
-                                best_model_save_path='PPO2_periodic_reward_model_logs/',
-                                log_path='PPO2_periodic_reward_logs_1/', eval_freq=500,
+                                best_model_save_path='PPO2_periodic_reward_models/',
+                                log_path='PPO2_periodic_reward_logs/', eval_freq=1000,
                                 deterministic=True, render=False)
 
-    model.learn(total_timesteps=int(1e9), callback=eval_callback, log_interval=100) # Try a billion learning steps
+    model.learn(total_timesteps=int(1e9), callback=eval_callback, log_interval=1000) # Try a billion learning steps
 
     model.save("ppo2_rex_1_billion") # save the last model in training
 
@@ -80,8 +84,8 @@ if use_TD3:
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
     eval_callback = EvalCallback(env, 
-                            best_model_save_path='TD3_model_logs/',
-                            log_path='TD3_logs_1/', eval_freq=2000,
+                            best_model_save_path='TD3_peridodic_reward_models/',
+                            log_path='TD3_periodic_reward_logs/', eval_freq=1000,
                             deterministic=True, render=False)
 
     # model = TD3.load(load_path='TD3_best_so_far/best_model', 
@@ -107,8 +111,8 @@ if use_TD3:
                 action_noise=action_noise, 
                 verbose=1)
 
-    model.learn(total_timesteps=int(1e7), # 10 million training steps
+    model.learn(total_timesteps=int(1e9), # 1 billion training steps
                 callback=eval_callback, 
-                log_interval=100)
+                log_interval=1000)
 
     model.save("td3_rex")

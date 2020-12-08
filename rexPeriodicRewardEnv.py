@@ -224,6 +224,13 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
 
     def reset(self):
         self.init_pose = rex_constants.INIT_POSES["stand"]
+        self.phase = 0
+        self.speed = np.random.uniform(self.min_speed, self.max_speed)
+        self.side_speed = np.random.uniform(self.min_side_speed, self.max_side_speed)
+        self.speed_des = [self.speed, self.side_speed]
+        self.ratio = np.random.uniform(self.min_swing_ratio, self.max_swing_ratio)
+        self.cycle_complete = 0
+        
         return super(rexPeriodicRewardEnv, self).reset(initial_motor_angles=self.init_pose, reset_duration=0.5)
         
 
