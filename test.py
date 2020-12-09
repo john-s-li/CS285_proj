@@ -126,7 +126,7 @@ for i in range(rex_joints):
 for l in link_name_to_ID.keys():
     if True:
         print('Link name = ', l)
-        print('Link orientation = ', p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[1]) 
+        print('Link orientation = ', p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[-1]) 
 
 # # initialize toe_position logging (in world frame)
 # toe_pos = { 'front_left_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['front_left_toe_link'])[0],

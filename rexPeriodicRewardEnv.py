@@ -356,14 +356,17 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         return reward
 
     def get_shoulder_orientation(self):
+        """
+            returns the orientation of shoulder links in the local inertial frame
+        """
         FL_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
-                                                 linkIndex=self.link_name_to_ID['front_left_shoulder_link'])[1]
+                                                 linkIndex=self.link_name_to_ID['front_left_shoulder_link'])[-1]
         FR_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
-                                                 linkIndex=self.link_name_to_ID['front_right_shoulder_link'])[1]
+                                                 linkIndex=self.link_name_to_ID['front_right_shoulder_link'])[-1]
         RL_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
-                                                 linkIndex=self.link_name_to_ID['rear_left_shoulder_link'])[1]
+                                                 linkIndex=self.link_name_to_ID['rear_left_shoulder_link'])[-1]
         RR_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
-                                                 linkIndex=self.link_name_to_ID['rear_right_shoulder_link'])[1]
+                                                 linkIndex=self.link_name_to_ID['rear_right_shoulder_link'])[-1]
 
         return [FL_shoulder_orientation, FR_shoulder_orientation, RL_shoulder_orientation, RR_shoulder_orientation]
 
