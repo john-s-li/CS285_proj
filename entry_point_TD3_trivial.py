@@ -16,9 +16,8 @@ from stable_baselines.ddpg.noise import NormalActionNoise, OrnsteinUhlenbeckActi
 from rex_gym.envs.rex_gym_env import RexGymEnv
 
 env = RexGymEnv(terrain_id='plane', render=False) # Base env
-# env = DummyVecEnv([lambda: env])
 # check to see that rex_gym is compatible with baselines
-check_env(env) 
+#check_env(env) 
 
 # Make parallel environments of rex
 n_envs = 1
@@ -28,9 +27,6 @@ n_envs = 1
                 # norm_reward=False,
                 # clip_obs=5., # this is the value used in ppo/algorithm.py from Nico 
                 # gamma=0.99) # with or without VecNormalize
-
-# use PPO2 for use of recurrent policies to combat partial observability
-
 
 from stable_baselines.td3.policies import FeedForwardPolicy
 
@@ -45,35 +41,35 @@ class CustomTD3Policy(FeedForwardPolicy):
 n_actions = env.action_space.shape[-1]
 action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
-eval_callback = EvalCallback(env, 
-                    best_model_save_path='TD3_trivial_best_models/',
-                    log_path='TD3_eval_trivial_logs/', eval_freq=10000,
-                    deterministic=True, render=False)
+# eval_callback = EvalCallback(env, 
+#                         best_model_save_path='TD3_PR_best_models_2/',
+#                         log_path='TD3_eval_PR_logs_2/', eval_freq=50000,
+#                         deterministic=True, render=False)
 
-checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='TD3_trivial_checkpoint_models/')
-callback = CallbackList([checkpoint_callback, eval_callback])
+checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='TD3_trivial_checkpoint_models/')
+# callback = CallbackList([checkpoint_callback, eval_callback])
 
 model = TD3(CustomTD3Policy, 
-        env, 
-        gamma=0.99, 
-        learning_rate=3e-4, 
-        buffer_size=100000,
-        learning_starts=10000,
-        train_freq=100, 
-        gradient_steps=100, 
-        batch_size=256, 
-        tau=0.005, 
-        policy_delay=2, 
-        target_policy_noise=0.2, 
-        target_noise_clip=0.5, 
-        random_exploration=0.0, 
-        tensorboard_log='TD3_experiment_trivial_logs/',
-        seed=1, 
-        action_noise=action_noise, 
-        verbose=1)
+            env, 
+            gamma=0.99, 
+            learning_rate=3e-4, 
+            buffer_size=100000,
+            learning_starts=10000,
+            train_freq=100, 
+            gradient_steps=100, 
+            batch_size=256, 
+            tau=0.005, 
+            policy_delay=2, 
+            target_policy_noise=0.2, 
+            target_noise_clip=0.5, 
+            random_exploration=0.0, 
+            tensorboard_log='TD3_experiment_trivial_logs/',
+            seed=1, 
+            action_noise=action_noise, 
+            verbose=1)
 
 model.learn(total_timesteps=int(1e6), # 1 mil training steps
-        callback=callback, 
-        log_interval=1000)
+            callback=checkpoint_callback, 
+            log_interval=1000)
 
 model.save("td3_rex_trivial")

@@ -19,7 +19,7 @@ from rexPeriodicRewardEnv import rexPeriodicRewardEnv
 env = rexPeriodicRewardEnv(terrain_id='plane', render=False) 
 # env = DummyVecEnv([lambda: env])
 # check to see that rex_gym is compatible with baselines
-check_env(env) 
+#check_env(env) 
 
 # Make parallel environments of rex
 n_envs = 1
@@ -46,13 +46,13 @@ class CustomTD3Policy(FeedForwardPolicy):
 n_actions = env.action_space.shape[-1]
 action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
-eval_callback = EvalCallback(env, 
-                        best_model_save_path='TD3_PR_best_models_2/',
-                        log_path='TD3_eval_PR_logs_2/', eval_freq=10000,
-                        deterministic=True, render=False)
+# eval_callback = EvalCallback(env, 
+#                         best_model_save_path='TD3_PR_best_models_2/',
+#                         log_path='TD3_eval_PR_logs_2/', eval_freq=50000,
+#                         deterministic=True, render=False)
 
-checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='TD3_PR_checkpoint_models_2/')
-callback = CallbackList([checkpoint_callback, eval_callback])
+checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='TD3_PR_checkpoint_models_2/')
+# callback = CallbackList([checkpoint_callback, eval_callback])
 
 model = TD3(CustomTD3Policy, 
             env, 
@@ -74,7 +74,7 @@ model = TD3(CustomTD3Policy,
             verbose=1)
 
 model.learn(total_timesteps=int(1e6), # 1 mil training steps
-            callback=callback, 
+            callback=checkpoint_callback, 
             log_interval=1000)
 
 model.save("td3_rex_PR")
