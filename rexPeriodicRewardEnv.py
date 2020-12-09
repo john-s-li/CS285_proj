@@ -88,8 +88,8 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         self.max_speed = 1.0
         self.min_speed = 0.2
         
-        self.min_side_speed = -0.3
-        self.max_side_speed =  0.3
+        self.min_side_speed = 0.0
+        self.max_side_speed = 0.0
 
         self.speed = np.random.uniform(self.min_speed, self.max_speed)
         self.side_speed = np.random.uniform(self.min_side_speed, self.max_side_speed)
@@ -154,6 +154,8 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                               'rear_right_toe_pos'  : p.getLinkState(self.rex.quadruped, self.link_name_to_ID['rear_right_toe_link'])[0]
 
         }  
+
+        print('Using Periodic Reward Composition Rex Environment')
 
         
     def step(self, action):
@@ -326,6 +328,14 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         orient_des = [0, 0, 0, 1]
         orient_err = 6 * (1 - np.inner(orient_curr, orient_des)**2 )
 
+        shoulder_orient_des = [0, 0, 0, 1]
+        FL_sh, FR_sh, RL_sh, RR_sh = self.get_shoulder_orientation()
+
+        shoulder_err = 10 * ((1 - np.inner(shoulder_orient_des, FL_sh))**2 + 
+                             (1 - np.inner(shoulder_orient_des, FR_sh))**2 +
+                             (1 - np.inner(shoulder_orient_des, RL_sh))**2 + 
+                             (1 - np.inner(shoulder_orient_des, RR_sh))**2)
+
         # Energy Penalties --------------------------------------------------------------
         energy_penalty = np.abs(np.dot(self.rex.GetMotorTorques(),
                                        self.rex.GetMotorVelocities())) * self.time_step
@@ -335,7 +345,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         accel_penalty = 0.15 * np.abs(a_trans.sum() + a_rot.sum())
 
         reward = 0.000 + \
-                 0.250 * np.exp(-orient_err)     +  \
+                 0.250 * np.exp(-orient_err - shoulder_err) +  \
                  0.225 * np.exp(-foot_penalties) +  \
                  0.075 * np.exp(-height_err)     +  \
                  0.200 * np.exp(-x_vel_err)      +  \
@@ -344,6 +354,19 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                  0.025 * np.exp(-energy_penalty)
 
         return reward
+
+    def get_shoulder_orientation(self):
+        FL_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
+                                                 linkIndex=self.link_name_to_ID['front_left_shoulder_link'])[1]
+        FR_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
+                                                 linkIndex=self.link_name_to_ID['front_right_shoulder_link'])[1]
+        RL_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
+                                                 linkIndex=self.link_name_to_ID['rear_left_shoulder_link'])[1]
+        RR_shoulder_orientation = p.getLinkState(bodyUniqueId=self.rex.quadruped, 
+                                                 linkIndex=self.link_name_to_ID['rear_right_shoulder_link'])[1]
+
+        return [FL_shoulder_orientation, FR_shoulder_orientation, RL_shoulder_orientation, RR_shoulder_orientation]
+
 
     def get_base_velocity(self):
         trans_v, rot_v = p.getBaseVelocity(bodyUniqueId=self.rex.quadruped)

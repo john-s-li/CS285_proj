@@ -8,7 +8,7 @@ from rex_gym.envs.gym.standup_env import RexStandupEnv
 from rex_gym.envs.gym.walk_env import RexWalkEnv
 from rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
-env = rexPeriodicRewardEnv(terrain_id='plane', render=False) 
+env = rexPeriodicRewardEnv(terrain_id='plane', render=True) 
 p = env.rex._pybullet_client
 model_id = env.rex.quadruped
 print('model ID: ', model_id)
@@ -123,19 +123,24 @@ for i in range(rex_joints):
 	name = p.getJointInfo(model_id, i)[12].decode('UTF-8')
 	link_name_to_ID[name] = i
 
-# initialize toe_position logging (in world frame)
-toe_pos = { 'front_left_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['front_left_toe_link'])[0],
-            'front_right_toe_pos' : p.getLinkState(model_id, link_name_to_ID['front_right_toe_link'])[0],
-            'rear_left_toe_pos'   : p.getLinkState(model_id, link_name_to_ID['rear_left_toe_link'])[0],
-            'rear_right_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['rear_right_toe_link'])[0]
+for l in link_name_to_ID.keys():
+    if True:
+        print('Link name = ', l)
+        print('Link orientation = ', p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[1]) 
 
-        }       
+# # initialize toe_position logging (in world frame)
+# toe_pos = { 'front_left_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['front_left_toe_link'])[0],
+#             'front_right_toe_pos' : p.getLinkState(model_id, link_name_to_ID['front_right_toe_link'])[0],
+#             'rear_left_toe_pos'   : p.getLinkState(model_id, link_name_to_ID['rear_left_toe_link'])[0],
+#             'rear_right_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['rear_right_toe_link'])[0]
 
-time = 0
-for _ in range(10000):
-    ob, re, done, ac = env.step(env.action_space.sample()) # take a random action
-    #print(ac)
-    #print_contact_info()
-    #print_toe_velocities(toe_pos)
+#         }       
+
+# time = 0
+# for _ in range(10000):
+#     ob, re, done, ac = env.step(env.action_space.sample()) # take a random action
+#     #print(ac)
+#     #print_contact_info()
+#     #print_toe_velocities(toe_pos)
 
 env.close()
