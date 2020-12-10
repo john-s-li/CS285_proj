@@ -46,7 +46,7 @@ action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n
 #                         log_path='TD3_eval_PR_logs_2/', eval_freq=50000,
 #                         deterministic=True, render=False)
 
-checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='TD3_trivial_checkpoint_models/')
+checkpoint_callback = CheckpointCallback(save_freq=10000, save_path='TD3_trivial_checkpoint_models_2/')
 # callback = CallbackList([checkpoint_callback, eval_callback])
 
 model = TD3(CustomTD3Policy, 
@@ -63,13 +63,13 @@ model = TD3(CustomTD3Policy,
             target_policy_noise=0.2, 
             target_noise_clip=0.5, 
             random_exploration=0.0, 
-            tensorboard_log='TD3_experiment_trivial_logs/',
+            tensorboard_log='TD3_experiment_trivial_logs_2/',
             seed=1, 
             action_noise=action_noise, 
             verbose=1)
 
-model.learn(total_timesteps=int(1e6), # 1 mil training steps
+model.learn(total_timesteps=int(1e7), # 10 mil training steps
             callback=checkpoint_callback, 
-            log_interval=1000)
+            log_interval=5000)
 
 model.save("td3_rex_trivial")
