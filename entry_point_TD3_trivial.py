@@ -52,7 +52,7 @@ checkpoint_callback = CheckpointCallback(save_freq=10000, save_path='TD3_trivial
 model = TD3(CustomTD3Policy, 
             env, 
             gamma=0.99, 
-            learning_rate=3e-4, 
+            learning_rate=0.0001, 
             buffer_size=100000,
             learning_starts=10000,
             train_freq=100, 

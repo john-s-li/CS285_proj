@@ -51,13 +51,13 @@ action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n
 #                         log_path='TD3_eval_PR_logs_2/', eval_freq=50000,
 #                         deterministic=True, render=False)
 
-checkpoint_callback = CheckpointCallback(save_freq=10000, save_path='TD3_PR_checkpoint_models_3/')
+checkpoint_callback = CheckpointCallback(save_freq=10000, save_path='TD3_PR_checkpoint_models_4/')
 # callback = CallbackList([checkpoint_callback, eval_callback])
 
 model = TD3(CustomTD3Policy, 
             env, 
             gamma=0.99, 
-            learning_rate=3e-4, 
+            learning_rate=0.0001, 
             buffer_size=100000,
             learning_starts=10000,
             train_freq=100, 
@@ -68,7 +68,7 @@ model = TD3(CustomTD3Policy,
             target_policy_noise=0.2, 
             target_noise_clip=0.5, 
             random_exploration=0.0, 
-            tensorboard_log='TD3_experiment_PR_logs_3/',
+            tensorboard_log='TD3_experiment_PR_logs_4/',
             seed=1, 
             action_noise=action_noise, 
             verbose=1)

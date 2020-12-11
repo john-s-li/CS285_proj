@@ -29,19 +29,19 @@ n_envs = 1
 
 # use PPO2 for use of recurrent policies to combat partial observability
 
-policy_kwargs = dict(layers=[256, 256])
+policy_kwargs = dict(layers=[256, 256], n_steps=300, n_env=32) 
 
 model = PPO2(MlpLstmPolicy, # policy
             env, 
             gamma=0.99, # discount factor
             n_steps=128, # number of steps to run for each environment per update
             ent_coef=0.03, # entropy coefficient for exploration
-            learning_rate=0.00025, 
+            learning_rate=0.0001, 
             vf_coef=0.5, # value function coefficient for the loss calculation
             max_grad_norm=0.5, # maximum value for the gradient clipping
             lam=0.95, # factor for trade-off of bias vs variance for Generalized Advantage Estimator
             nminibatches=n_envs*1, # number of training minibatches per update. For recurrent policies, the number of environments run in parallel should be a multiple of nminibatches.
-            noptepochs=10, # number of epoch when optimizing the surrogate
+            noptepochs=4, # number of epoch when optimizing the surrogate
             cliprange=0.2, # this is epsilon for L_clip in PPO paper
             tensorboard_log='PPO_trivial_logs/',
             verbose=1, # the verbosity level: 0 none, 1 training information, 2 tensorflow debug
@@ -57,6 +57,6 @@ model = PPO2(MlpLstmPolicy, # policy
 checkpoint_callback = CheckpointCallback(save_freq=10000, save_path='PPO2_trivial_checkpoint_models/')
 #callback = CallbackList([checkpoint_callback, eval_callback])
 
-model.learn(total_timesteps=int(1e7), callback=checkpoint_callback, log_interval=50000) # Try 1 million
+model.learn(total_timesteps=int(1e7), callback=checkpoint_callback, log_interval=5000) # Try 1 million
 
 model.save("ppo2_rex_trivial") # save the last model in training

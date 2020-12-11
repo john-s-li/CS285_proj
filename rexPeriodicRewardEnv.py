@@ -83,10 +83,10 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         """
         self.phase = 0
 
-        self._gait_type = gait_type        
+        self._gait_type = gait_type        s
         # for observation space bounding 
         self.max_speed = 1.0
-        self.min_speed = 0.2
+        self.min_speed = 0.5 # change back to 0.2 for OLD TD3 model evaluation
         
         self.min_side_speed = 0.0
         self.max_side_speed = 0.0
@@ -108,8 +108,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         super(rexPeriodicRewardEnv,
               self).__init__(urdf_version=urdf_version,
                              accurate_motor_model_enabled=True,
-                             motor_overheat_protection=True,
-                             hard_reset=False,
+                             motor_overheat_protection=False,
                              motor_kp=motor_kp,
                              motor_kd=motor_kd,
                              remove_default_joint_damping=False,
@@ -211,7 +210,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         self.base_vel_next_trans, self.base_vel_next_rot = self.get_base_velocity()
                             
         self._env_step_counter += 1
-        self.phase += self.action_repeat # the cycle length is CYCLE_TIME/time_step so can add 
+        self.phase += self._action_repeat # the cycle length is CYCLE_TIME/time_step so can add 
                                           # how many times an action was repeated
 
         if self.phase > self.cycle_len:
@@ -320,38 +319,49 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
 
         # Speed 
         vx, vy, _ = p.getBaseVelocity(bodyUniqueId=self.rex.quadruped)[0]
+        vx = -vx # in rex, forward is the negative x direction
         x_vel_err = 4*np.abs(vx - self.speed) # higher emphasis on x velocity error
         y_vel_err = np.abs(vy - self.side_speed)
 
         # Orientation
         orient_curr = self.rex.GetBaseOrientation()
-        orient_des = [0, 0, 0, 1]
+        orient_des = [0, 0, 0, 1] # not exact, but shouldn't be too far from this
         orient_err = 6 * (1 - np.inner(orient_curr, orient_des)**2 )
 
         shoulder_orient_des = [0, 0, 0, 1]
         FL_sh, FR_sh, RL_sh, RR_sh = self.get_shoulder_orientation()
 
-        shoulder_err = 10 * ((1 - np.inner(shoulder_orient_des, FL_sh))**2 + 
-                             (1 - np.inner(shoulder_orient_des, FR_sh))**2 +
-                             (1 - np.inner(shoulder_orient_des, RL_sh))**2 + 
-                             (1 - np.inner(shoulder_orient_des, RR_sh))**2)
+        # quaternion similarity: 1 - <q1, q2>**2 == 0 when 100% similar
+        # good when error < 0.01 (individually)
+        # put HUGE penalty on this
+        shoulder_err = 20 * ((1 - np.inner(shoulder_orient_des, FL_sh)**2) + 
+                             (1 - np.inner(shoulder_orient_des, FR_sh)**2) +
+                             (1 - np.inner(shoulder_orient_des, RL_sh)**2) + 
+                             (1 - np.inner(shoulder_orient_des, RR_sh)**2))
 
         # Energy Penalties --------------------------------------------------------------
         energy_penalty = np.abs(np.dot(self.rex.GetMotorTorques(),
-                                       self.rex.GetMotorVelocities())) * self.time_step
+                                       self.rex.GetMotorVelocities())) * self._time_step
 
         # Acceleration
         a_trans, a_rot = self.get_base_accelerations()
         accel_penalty = 0.15 * np.abs(a_trans.sum() + a_rot.sum())
 
-        reward = 0.000 + \
-                 0.250 * np.exp(-orient_err - shoulder_err) +  \
-                 0.225 * np.exp(-foot_penalties) +  \
+        # need to encourage exploration: current issue --> Rex is stuck at origin
+        # because positive rewards all the time
+        # need lim error --> 0, reward > 0 
+
+        beta = -0.75
+
+        reward = beta + \
+                 0.200 * np.exp(-orient_err - shoulder_err) +  \
+                 0.275 * np.exp(-foot_penalties) +  \
                  0.075 * np.exp(-height_err)     +  \
-                 0.200 * np.exp(-x_vel_err)      +  \
+                 0.250 * np.exp(-x_vel_err)      +  \
                  0.100 * np.exp(-y_vel_err)      +  \
-                 0.125 * np.exp(-accel_penalty)  +  \
+                 0.075 * np.exp(-accel_penalty)  +  \
                  0.025 * np.exp(-energy_penalty)
+
 
         return reward
 
@@ -376,8 +386,8 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         return trans_v, rot_v
 
     def get_base_accelerations(self):
-        trans_a = (np.asarray(self.base_vel_next_trans) - np.asarray(self.base_vel_curr_trans)) / (self.time_step * self.action_repeat)
-        rot_a = (np.asarray(self.base_vel_next_rot) - np.asarray(self.base_vel_curr_rot)) / (self.time_step * self.action_repeat)
+        trans_a = (np.asarray(self.base_vel_next_trans) - np.asarray(self.base_vel_curr_trans)) / (self._time_step * self._action_repeat)
+        rot_a = (np.asarray(self.base_vel_next_rot) - np.asarray(self.base_vel_curr_rot)) / (self._time_step * self._action_repeat)
 
         return trans_a, rot_a
 
@@ -436,10 +446,10 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         RR_pos_last = np.asarray( self.toe_pos_last['rear_right_toe_pos'] )
 
         # Do velocity calculations
-        FL_toe_vel = np.linalg.norm(( (FL_pos_curr - FL_pos_last)/(self.time_step * self.action_repeat) ), ord=2)
-        FR_toe_vel = np.linalg.norm(( (FR_pos_curr - FR_pos_last)/(self.time_step * self.action_repeat) ), ord=2)
-        RL_toe_vel = np.linalg.norm(( (RL_pos_curr - RL_pos_last)/(self.time_step * self.action_repeat) ), ord=2)
-        RR_toe_vel = np.linalg.norm(( (RR_pos_curr - RR_pos_last)/(self.time_step * self.action_repeat) ), ord=2)
+        FL_toe_vel = np.linalg.norm(( (FL_pos_curr - FL_pos_last)/(self._time_step * self._action_repeat) ), ord=2)
+        FR_toe_vel = np.linalg.norm(( (FR_pos_curr - FR_pos_last)/(self._time_step * self._action_repeat) ), ord=2)
+        RL_toe_vel = np.linalg.norm(( (RL_pos_curr - RL_pos_last)/(self._time_step * self._action_repeat) ), ord=2)
+        RR_toe_vel = np.linalg.norm(( (RR_pos_curr - RR_pos_last)/(self._time_step * self._action_repeat) ), ord=2)
 
         # If any velocities are super tiny, zero them out
         eps = 0.01

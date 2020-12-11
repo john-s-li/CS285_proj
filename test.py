@@ -8,7 +8,8 @@ from rex_gym.envs.gym.standup_env import RexStandupEnv
 from rex_gym.envs.gym.walk_env import RexWalkEnv
 from rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
-env = rexPeriodicRewardEnv(terrain_id='plane', render=True) 
+#env = rexPeriodicRewardEnv(terrain_id='plane', render=True) 
+env = RexWalkEnv(render=True)
 p = env.rex._pybullet_client
 model_id = env.rex.quadruped
 print('model ID: ', model_id)
@@ -88,10 +89,10 @@ def print_toe_velocities(toe_pos_last):
     RR_pos_last = np.asarray( toe_pos_last['rear_right_toe_pos'] )
 
     # Do velocity calculations
-    FL_toe_vel = np.linalg.norm(( (FL_pos_curr - FL_pos_last)/env._time_step ), ord=2)
-    FR_toe_vel = np.linalg.norm(( (FR_pos_curr - FR_pos_last)/env._time_step ), ord=2)
-    RL_toe_vel = np.linalg.norm(( (RL_pos_curr - RL_pos_last)/env._time_step ), ord=2)
-    RR_toe_vel = np.linalg.norm(( (RR_pos_curr - RR_pos_last)/env._time_step ), ord=2)
+    FL_toe_vel = np.linalg.norm(( (FL_pos_curr - FL_pos_last)/env.time_step ), ord=2)
+    FR_toe_vel = np.linalg.norm(( (FR_pos_curr - FR_pos_last)/env.time_step ), ord=2)
+    RL_toe_vel = np.linalg.norm(( (RL_pos_curr - RL_pos_last)/env.time_step ), ord=2)
+    RR_toe_vel = np.linalg.norm(( (RR_pos_curr - RR_pos_last)/env.time_step ), ord=2)
 
     # If any velocities are super tiny, zero them out
     eps = 0.01
@@ -123,10 +124,14 @@ for i in range(rex_joints):
 	name = p.getJointInfo(model_id, i)[12].decode('UTF-8')
 	link_name_to_ID[name] = i
 
+print('Initial state info: ----------------------------------------------------')
 for l in link_name_to_ID.keys():
-    if True:
+    if 'shoulder' in l:
         print('Link name = ', l)
-        print('Link orientation = ', p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[-1]) 
+        orientation = p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[-1]
+        print('Link orientation (Quat) = ', orientation) 
+
+        print('Link orientation (Euler) = ', p.getEulerFromQuaternion(orientation))
 
 # # initialize toe_position logging (in world frame)
 # toe_pos = { 'front_left_toe_pos'  : p.getLinkState(model_id, link_name_to_ID['front_left_toe_link'])[0],
@@ -136,11 +141,23 @@ for l in link_name_to_ID.keys():
 
 #         }       
 
-# time = 0
-# for _ in range(10000):
-#     ob, re, done, ac = env.step(env.action_space.sample()) # take a random action
-#     #print(ac)
-#     #print_contact_info()
-#     #print_toe_velocities(toe_pos)
+time = 0
+des = np.array([0,0,0,1])
+for _ in range(1000):
+    ob, re, done, ac = env.step(env.action_space.sample()) # take a random action
+    print('\n')
+    for l in link_name_to_ID.keys():
+        if 'shoulder' in l:
+            print('Link name = ', l)
+            orientation = np.array(p.getLinkState(bodyUniqueId=model_id, linkIndex=link_name_to_ID[l])[-1])
+            print('Link orientation (Quat) = ', orientation) 
+            similarity = 1 - np.inner(des, orientation)**2
+            print('Similarity = ', similarity)
+            
+
+    #print(p.getBaseVelocity(bodyUniqueId=model_id))
+    #print(ac)
+    #print_contact_info()
+    #print_toe_velocities(toe_pos)
 
 env.close()
