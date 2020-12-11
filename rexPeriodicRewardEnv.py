@@ -83,7 +83,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         """
         self.phase = 0
 
-        self._gait_type = gait_type        s
+        self._gait_type = gait_type        
         # for observation space bounding 
         self.max_speed = 1.0
         self.min_speed = 0.5 # change back to 0.2 for OLD TD3 model evaluation
