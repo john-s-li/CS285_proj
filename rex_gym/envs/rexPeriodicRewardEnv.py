@@ -108,7 +108,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         super(rexPeriodicRewardEnv,
               self).__init__(urdf_version=urdf_version,
                              accurate_motor_model_enabled=True,
-                             motor_overheat_protection=False,
+                             motor_overheat_protection=True,
                              motor_kp=motor_kp,
                              motor_kd=motor_kd,
                              remove_default_joint_damping=False,
@@ -153,8 +153,6 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                               'rear_right_toe_pos'  : p.getLinkState(self.rex.quadruped, self.link_name_to_ID['rear_right_toe_link'])[0]
 
         }  
-
-        print('Using Periodic Reward Composition Rex Environment')
 
         
     def step(self, action):
@@ -334,7 +332,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         # quaternion similarity: 1 - <q1, q2>**2 == 0 when 100% similar
         # good when error < 0.01 (individually)
         # put HUGE penalty on this
-        shoulder_err = 20 * ((1 - np.inner(shoulder_orient_des, FL_sh)**2) + 
+        shoulder_err = 10 * ((1 - np.inner(shoulder_orient_des, FL_sh)**2) + 
                              (1 - np.inner(shoulder_orient_des, FR_sh)**2) +
                              (1 - np.inner(shoulder_orient_des, RL_sh)**2) + 
                              (1 - np.inner(shoulder_orient_des, RR_sh)**2))
@@ -351,7 +349,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         # because positive rewards all the time
         # need lim error --> 0, reward > 0 
 
-        beta = -0.75
+        beta = -0.6
 
         reward = beta + \
                  0.200 * np.exp(-orient_err - shoulder_err) +  \
