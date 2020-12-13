@@ -34,10 +34,10 @@ def eval_policy(policy, eval_episodes=10):
 		avg_rewards.append(avg_reward)
 
 	mean = np.mean(avg_rewards)
-	std = np.std(rewards)
+	std = np.std(avg_rewards)
 
 	print("---------------------------------------")
-	print(f"Evaluation over {eval_episodes} episodes: eval_reward = {avg_reward:.3f} and eval_std = {std:.3f}")
+	print(f"Evaluation over {eval_episodes} episodes: eval_reward = {mean:.3f} and eval_std = {std:.3f}")
 	print("---------------------------------------")
 	return (mean, std)
 
