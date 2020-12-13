@@ -157,6 +157,8 @@ for _ in range(1000):
 
     print(p.getBaseVelocity(bodyUniqueId=model_id))
     print(env.rex.GetBasePosition())
+    print(env.rex.GetBaseOrientation())
+    print('Base similarity = ', np.inner(des, env.rex.GetBaseOrientation())**2)
     #print(ac)
     #print_contact_info()
     #print_toe_velocities(toe_pos)

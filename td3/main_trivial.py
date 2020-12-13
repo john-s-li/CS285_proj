@@ -64,11 +64,11 @@ if __name__ == "__main__":
 	print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
 	print("---------------------------------------")
 
-	if not os.path.exists("./results"):
-		os.makedirs("./results")
+	if not os.path.exists("./trivial_results"):
+		os.makedirs("./trivial_results")
 
-	if args.save_model and not os.path.exists("./models"):
-		os.makedirs("./models")
+	if args.save_model and not os.path.exists("./trivial_models"):
+		os.makedirs("./trivial_models")
 
 	env = RexGymEnv(render=False)
 

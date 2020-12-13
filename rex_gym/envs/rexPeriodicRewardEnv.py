@@ -301,7 +301,11 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
             c_swing_frc_RR = 0
             c_swing_spd_RR = 1
 
-        FL_foot_force, FR_foot_force, RL_foot_force, RR_foot_force = self.get_contact_forces()/100 # so not too big
+        FL_foot_force, FR_foot_force, RL_foot_force, RR_foot_force = self.get_contact_forces() # so not too big
+        FL_foot_force /= 100.0
+        FR_foot_force /= 100.0
+        RL_foot_force /= 100.0
+        RR_foot_force /= 100.0
         FL_vel, FR_vel, RL_vel, RR_vel = self.get_foot_velocities()
 
         FL_penalty = np.abs(c_swing_frc_FL*FL_foot_force + c_swing_spd_FL*FL_vel)
@@ -329,6 +333,11 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         orient_curr = self.rex.GetBaseOrientation()
         orient_des = [0, 0, 0, 1] # not exact, but shouldn't be too far from this
         orient_err = 6 * (1 - np.inner(orient_curr, orient_des)**2 )
+
+        if np.inner(orient_curr, orient_des)**2 < 0.9: # base already NOT facing forward anymore
+            re_done = True
+        else:
+            re_done = False
 
         shoulder_orient_des = [0, 0, 0, 1]
         FL_sh, FR_sh, RL_sh, RR_sh = self.get_shoulder_orientation()
@@ -366,23 +375,18 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         # Cap the forward reward if a cap is set.
         forward_reward = min(forward_reward, self._forward_reward_cap)
 
-        if np.exp(-orient_err) < 0.8:
-            re_done = True
-        else:
-            re_done = False
-
         beta = 0.0
 
         # changed np.exp(.) to -(1 - np.exp) bc error needs to be penalized, not rewarded
         reward = beta + \
-                 0.200 * -(1 - np.exp(-orient_err - shoulder_err)) +  \
-                 0.275 * -(1 - np.exp(-foot_penalties)) +  \
-                 0.075 * -(1 - np.exp(-height_err))     +  \
-                 0.250 * -(1 - np.exp(-x_vel_err))      +  \
-                 0.100 * -(1 - np.exp(-y_vel_err))      +  \
-                 0.075 * -(1 - np.exp(-accel_penalty))  +  \
-                 0.025 * -(1 - np.exp(-energy_penalty)) +  \
-                 0.2*forward_reward
+                 -(1 - np.exp(-orient_err - shoulder_err)) +  \
+                 -(1 - np.exp(-foot_penalties)) +  \
+                 -(1 - np.exp(-height_err))     +  \
+                 -(1 - np.exp(-x_vel_err))      +  \
+                 -(1 - np.exp(-y_vel_err))      +  \
+                 -(1 - np.exp(-accel_penalty))  +  \
+                 -(1 - np.exp(-energy_penalty)) +  \
+                 forward_reward
 
 
         return reward, re_done

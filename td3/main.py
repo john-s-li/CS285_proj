@@ -64,11 +64,11 @@ if __name__ == "__main__":
 	print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
 	print("---------------------------------------")
 
-	if not os.path.exists("./results"):
-		os.makedirs("./results")
+	if not os.path.exists("./PR_results"):
+		os.makedirs("./PR_results")
 
-	if args.save_model and not os.path.exists("./models"):
-		os.makedirs("./models")
+	if args.save_model and not os.path.exists("./PR_models"):
+		os.makedirs("./PR_models")
 
 	env = rexPeriodicRewardEnv(render=False)
 
@@ -158,6 +158,6 @@ if __name__ == "__main__":
 		# Evaluate episode
 		if (t + 1) % args.eval_freq == 0:
 			evaluations.append(eval_policy(policy))
-			np.save(f"./results/{file_name}", evaluations)
+			np.save(f"./PR_results/{file_name}", evaluations)
 			if args.save_model: 
-				policy.save(f"./models/{file_name}")
+				policy.save(f"./PR_models/{file_name}")
