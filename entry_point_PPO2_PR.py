@@ -19,7 +19,7 @@ env = rexPeriodicRewardEnv(render=False)
 #check_env(env) 
 
 # Make parallel environments of rex
-n_envs = 4
+n_envs = 1
 env = DummyVecEnv([ lambda:env for i in range(n_envs) ])
 env = VecNormalize(env, 
                 norm_obs=True, 
@@ -50,14 +50,14 @@ model = PPO2(MlpLstmPolicy, # policy
             policy_kwargs=policy_kwargs)
 
 # Use deterministic actions for evaluation
-eval_callback = EvalCallback(env, 
-                            best_model_save_path='PPO2_PR_best_model/',
-                            log_path='PPO2_PR_eval_logs/', eval_freq=1000,
-                            deterministic=True, render=False)
+# eval_callback = EvalCallback(env, 
+#                             best_model_save_path='PPO2_PR_best_model/',
+#                             log_path='PPO2_PR_eval_logs/', eval_freq=1000,
+#                             deterministic=True, render=False)
 
 checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='PPO2_PR_checkpoint_models/')
-callback = CallbackList([checkpoint_callback, eval_callback])
+#callback = CallbackList([checkpoint_callback, eval_callback])
 
-model.learn(total_timesteps=int(1e7), callback=callback, log_interval=5000) # Try 1 million
+model.learn(total_timesteps=int(1e7), callback=checkpoint_callback, log_interval=1000) # Try 1 million
 
 model.save("ppo2_rex_PR") # save the last model in trainin
