@@ -12,24 +12,22 @@ import DDPG
 from rex_gym.envs.rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
 def eval_policy(policy, env, eval_episodes=10):
-	avg_rewards = []
+	
+	rewards = []
 	for _ in range(eval_episodes):
 		state, done = env.reset(), False
 		env.seed(np.random.randint(5, 500))
 		i = 0
-		avg_reward = 0
-		rewards = []
+		sum_reward = 0
 		while (not done and i < env._max_episode_steps):
 			action = policy.select_action(np.array(state))
 			state, reward, done, _ = env.step(action)
-			rewards.append(reward)
-			avg_reward += reward
+			sum_reward += reward
 			i += 1
-		avg_reward /= i
-		avg_rewards.append(avg_reward)
+		rewards.append(sum_reward)
 
-	mean = np.mean(avg_rewards)
-	std = np.std(avg_rewards)
+	mean = np.mean(rewards)
+	std = np.std(rewards)
 
 	print("---------------------------------------")
 	print(f"Evaluation over {eval_episodes} episodes: eval_reward = {mean:.3f} and eval_std = {std:.3f}")
