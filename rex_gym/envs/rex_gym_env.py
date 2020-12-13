@@ -160,7 +160,7 @@ class RexGymEnv(gym.Env):
               ValueError: If the urdf_version is not supported.
         """
         self.ratio = ratio
-        self._max_episode_steps = 10000
+        self._max_episode_steps = 30000
 
         self.mark = mark
         self.num_motors = mark_constants.MARK_DETAILS['motors_num'][self.mark]

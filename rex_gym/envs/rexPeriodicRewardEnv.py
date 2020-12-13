@@ -118,7 +118,6 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                              on_rack=on_rack,
                              render=render,
                              num_steps_to_log=num_steps_to_log,
-                             forward_reward_cap=2,
                              env_randomizer=env_randomizer,
                              log_path=log_path,
                              control_time_step=control_time_step,
@@ -378,14 +377,17 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         beta = 0.0
 
         # changed np.exp(.) to -(1 - np.exp) bc error needs to be penalized, not rewarded
+        # as forward reward increases, the errors need to play a larger role
         reward = beta + \
-                 -(1 - np.exp(-orient_err - shoulder_err)) +  \
-                 -(1 - np.exp(-foot_penalties)) +  \
-                 -(1 - np.exp(-height_err))     +  \
-                 -(1 - np.exp(-x_vel_err))      +  \
-                 -(1 - np.exp(-y_vel_err))      +  \
-                 -(1 - np.exp(-accel_penalty))  +  \
-                 -(1 - np.exp(-energy_penalty)) +  \
+                 forward_reward * (
+                 -0.25 * (1 - np.exp(-orient_err - shoulder_err)) + 
+                 -0.25 * (1 - np.exp(-foot_penalties)) +  
+                 -0.10 * (1 - np.exp(-height_err))     +  
+                 -0.20 * (1 - np.exp(-x_vel_err))      +  
+                 -0.10 * (1 - np.exp(-y_vel_err))      +  
+                 -0.05  * (1 - np.exp(-accel_penalty))  +  
+                 -0.05 * (1 - np.exp(-energy_penalty)) 
+                 ) + \
                  forward_reward
 
 

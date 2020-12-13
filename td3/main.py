@@ -17,26 +17,29 @@ def eval_policy(policy, eval_episodes=10):
 	eval_env = rexPeriodicRewardEnv(render=False)
 	eval_env.seed(np.random.randint(5, 500))
 
-	rewards = []
-	avg_reward = 0.0
+	avg_rewards = []
 	for _ in range(eval_episodes):
 		state, done = eval_env.reset(), False
 		eval_env.seed(np.random.randint(5, 500))
 		i = 0
+		avg_reward = 0
+		rewards = []
 		while (not done and i < eval_env._max_episode_steps):
 			action = policy.select_action(np.array(state))
 			state, reward, done, _ = eval_env.step(action)
 			rewards.append(reward)
 			avg_reward += reward
 			i += 1
+		avg_reward /= i
+		avg_rewards.append(avg_reward)
 
-	avg_reward /= eval_episodes
+	mean = np.mean(avg_rewards)
 	std = np.std(rewards)
 
 	print("---------------------------------------")
 	print(f"Evaluation over {eval_episodes} episodes: eval_reward = {avg_reward:.3f} and eval_std = {std:.3f}")
 	print("---------------------------------------")
-	return (avg_reward, std)
+	return (mean, std)
 
 
 if __name__ == "__main__":
