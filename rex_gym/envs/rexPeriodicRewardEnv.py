@@ -86,7 +86,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
 
         self._gait_type = gait_type        
         # for observation space bounding 
-        self.max_speed = 1.0
+        self.max_speed = 3.0
         self.min_speed = 0.5 # change back to 0.2 for OLD TD3 model evaluation
         
         self.min_side_speed = 0.0
@@ -118,6 +118,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                              on_rack=on_rack,
                              render=render,
                              num_steps_to_log=num_steps_to_log,
+                             forward_reward_cap=2,
                              env_randomizer=env_randomizer,
                              log_path=log_path,
                              control_time_step=control_time_step,
@@ -129,8 +130,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                              terrain_id=terrain_id,
                              terrain_type=terrain_type,
                              mark=mark,
-                             ratio=self.ratio,
-                             forward_reward_cap=5
+                             ratio=self.ratio
                             )
 
         self.height_des = 0.206 # this is init standing height for rex
@@ -216,8 +216,11 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
             self.phase = self.phase % self.cycle_len 
             self.cycle_complete += 1
 
-        reward = self._reward()
-        done = self._termination()
+        reward, re_done = self._reward()
+        if re_done:
+            done = True
+        else:
+            done = self._termination()
 
         if done:
             self.rex.Terminate()
@@ -298,13 +301,13 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
             c_swing_frc_RR = 0
             c_swing_spd_RR = 1
 
-        FL_foot_force, FR_foot_force, RL_foot_force, RR_foot_force = self.get_contact_forces()
+        FL_foot_force, FR_foot_force, RL_foot_force, RR_foot_force = self.get_contact_forces()/100 # so not too big
         FL_vel, FR_vel, RL_vel, RR_vel = self.get_foot_velocities()
 
-        FL_penalty = c_swing_frc_FL*FL_foot_force + c_swing_spd_FL*FL_vel
-        FR_penalty = c_swing_frc_FR*FR_foot_force + c_swing_spd_FR*FR_vel
-        RL_penalty = c_swing_frc_RL*RL_foot_force + c_swing_spd_RL*RL_vel
-        RR_penalty = c_swing_frc_RR*RR_foot_force + c_swing_spd_RR*RR_vel
+        FL_penalty = np.abs(c_swing_frc_FL*FL_foot_force + c_swing_spd_FL*FL_vel)
+        FR_penalty = np.abs(c_swing_frc_FR*FR_foot_force + c_swing_spd_FR*FR_vel)
+        RL_penalty = np.abs(c_swing_frc_RL*RL_foot_force + c_swing_spd_RL*RL_vel)
+        RR_penalty = np.abs(c_swing_frc_RR*RR_foot_force + c_swing_spd_RR*RR_vel)
 
         foot_penalties = FL_penalty + FR_penalty + RL_penalty + RR_penalty
   
@@ -350,19 +353,39 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
         # because positive rewards all the time
         # need lim error --> 0, reward > 0 
 
-        beta = -0.6
+        current_base_position = self.rex.GetBasePosition()
+        # observation = self._get_observation()
+        # forward gait
+        current_x = -current_base_position[0]
+        if self._backwards:
+            # backwards gait
+            current_x = -current_x
+        else:
+            # the far the better..
+            forward_reward = current_x
+        # Cap the forward reward if a cap is set.
+        forward_reward = min(forward_reward, self._forward_reward_cap)
 
+        if np.exp(-orient_err) < 0.8:
+            re_done = True
+        else:
+            re_done = False
+
+        beta = 0.0
+
+        # changed np.exp(.) to -(1 - np.exp) bc error needs to be penalized, not rewarded
         reward = beta + \
-                 0.200 * np.exp(-orient_err - shoulder_err) +  \
-                 0.275 * np.exp(-foot_penalties) +  \
-                 0.075 * np.exp(-height_err)     +  \
-                 0.250 * np.exp(-x_vel_err)      +  \
-                 0.100 * np.exp(-y_vel_err)      +  \
-                 0.075 * np.exp(-accel_penalty)  +  \
-                 0.025 * np.exp(-energy_penalty)
+                 0.200 * -(1 - np.exp(-orient_err - shoulder_err)) +  \
+                 0.275 * -(1 - np.exp(-foot_penalties)) +  \
+                 0.075 * -(1 - np.exp(-height_err))     +  \
+                 0.250 * -(1 - np.exp(-x_vel_err))      +  \
+                 0.100 * -(1 - np.exp(-y_vel_err))      +  \
+                 0.075 * -(1 - np.exp(-accel_penalty))  +  \
+                 0.025 * -(1 - np.exp(-energy_penalty)) +  \
+                 0.2*forward_reward
 
 
-        return reward
+        return reward, re_done
 
     def get_shoulder_orientation(self):
         """

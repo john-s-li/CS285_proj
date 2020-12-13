@@ -6,7 +6,7 @@ import numpy as np
 from rex_gym.envs.rex_gym_env import RexGymEnv
 from rex_gym.envs.gym.standup_env import RexStandupEnv
 from rex_gym.envs.gym.walk_env import RexWalkEnv
-from rexPeriodicRewardEnv import rexPeriodicRewardEnv
+from rex_gym.envs.rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
 #env = rexPeriodicRewardEnv(terrain_id='plane', render=True) 
 env = RexWalkEnv(render=True)
@@ -155,7 +155,8 @@ for _ in range(1000):
             print('Similarity = ', similarity)
             
 
-    #print(p.getBaseVelocity(bodyUniqueId=model_id))
+    print(p.getBaseVelocity(bodyUniqueId=model_id))
+    print(env.rex.GetBasePosition())
     #print(ac)
     #print_contact_info()
     #print_toe_velocities(toe_pos)

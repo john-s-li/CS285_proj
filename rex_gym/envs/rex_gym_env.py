@@ -160,7 +160,7 @@ class RexGymEnv(gym.Env):
               ValueError: If the urdf_version is not supported.
         """
         self.ratio = ratio
-        self._max_episode_steps = 20000
+        self._max_episode_steps = 10000
 
         self.mark = mark
         self.num_motors = mark_constants.MARK_DETAILS['motors_num'][self.mark]
@@ -500,10 +500,10 @@ class RexGymEnv(gym.Env):
         (the height is smaller than 0.13 meter), rex is considered fallen.
 
         COMMENT: no logic here for heigh being less than 0.13 meters
-                 need base z position and do logic here
+                 need base z position and do logic here (fixed - Johnathon)
 
         Returns:
-          Boolean value that indicates whether rex has fallen.
+          Boolean value that indicates whether rex has fallen or jumps too high
         """
         orientation = self.rex.GetBaseOrientation()
         rot_mat = self._pybullet_client.getMatrixFromQuaternion(orientation)

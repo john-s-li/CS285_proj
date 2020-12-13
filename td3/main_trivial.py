@@ -9,12 +9,12 @@ import TD3
 import OurDDPG
 import DDPG
 
-from rex_gym.envs.rexPeriodicRewardEnv import rexPeriodicRewardEnv
+from rex_gym.envs.rex_gym_env import RexGymEnv
 
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
 def eval_policy(policy, eval_episodes=10):
-	eval_env = rexPeriodicRewardEnv(render=False)
+	eval_env = RexGymEnv(render=False)
 	eval_env.seed(np.random.randint(5, 500))
 
 	rewards = []
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 	
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--policy", default="TD3")                  # Policy name (TD3, DDPG or OurDDPG)
-	parser.add_argument("--env", default=rexPeriodicRewardEnv(render=False))          # OpenAI gym environment name
+	parser.add_argument("--env", default=RexGymEnv(render=False))          # OpenAI gym environment name
 	parser.add_argument("--seed", default=0, type=int)              # Sets Gym, PyTorch and Numpy seeds
 	parser.add_argument("--start_timesteps", default=25e3, type=int)# Time steps initial random policy is used
 	parser.add_argument("--eval_freq", default=5e3, type=int)       # How often (time steps) we evaluate
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 	if args.save_model and not os.path.exists("./models"):
 		os.makedirs("./models")
 
-	env = rexPeriodicRewardEnv(render=False)
+	env = RexGymEnv(render=False)
 
 	# Set seeds
 	env.seed(args.seed)
@@ -158,6 +158,6 @@ if __name__ == "__main__":
 		# Evaluate episode
 		if (t + 1) % args.eval_freq == 0:
 			evaluations.append(eval_policy(policy))
-			np.save(f"./results/{file_name}", evaluations)
-			if args.save_model: 
-				policy.save(f"./models/{file_name}")
+			np.save(f"./trivial_results/{file_name}", evaluations)
+			if args.save_model:
+				policy.save(f"./trivial_models/{file_name}")
