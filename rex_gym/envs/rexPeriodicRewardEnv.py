@@ -9,7 +9,7 @@ from rex_gym.model import rex_constants, motor
 from rex_gym.model.gait_planner import GaitPlanner
 from rex_gym.model.kinematics import Kinematics
 
-import phase_constants
+import rex_gym.envs.phase_constants as phase_constants
 import numpy as np
 import pybullet as p
 import math
@@ -82,6 +82,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
                 rex_logging.proto.
         """
         self.phase = 0
+        self._episode_steps = 0
 
         self._gait_type = gait_type        
         # for observation space bounding 

@@ -1,12 +1,6 @@
 README.md
 setup.cfg
 setup.py
-policies/__init__.py
-policies/actor.py
-policies/autoencoder.py
-policies/base.py
-policies/critic.py
-policies/fit.py
 rex_gym.egg-info/PKG-INFO
 rex_gym.egg-info/SOURCES.txt
 rex_gym.egg-info/dependency_links.txt

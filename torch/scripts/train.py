@@ -8,7 +8,7 @@ import torch
 import torch_rl
 import sys
 
-from torch_rl.rex_gym.envs.rexPeriodicRewardEnv import rexPeriodicRewardEnv
+from rex_gym.envs.rexPeriodicRewardEnv import rexPeriodicRewardEnv
 
 import utils
 from model import ACModel
