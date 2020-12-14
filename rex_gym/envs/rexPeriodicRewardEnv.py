@@ -373,7 +373,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
             # the far the better..
             forward_reward = current_x
         # Cap the forward reward if a cap is set.
-        forward_reward = min(forward_reward, self._for1ward_reward_cap)
+        forward_reward = min(forward_reward, self._forward_reward_cap)
 
         # beta = 0.0
 
