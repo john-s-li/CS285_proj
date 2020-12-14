@@ -102,8 +102,8 @@ if __name__ == "__main__":
 		policy = DDPG.DDPG(**kwargs)
 
 	if args.load_model != "":
-		policy_file = file_name if args.load_model == "default" else args.load_model
-		policy.load(f"./models/{policy_file}")
+		policy_file = f"./models/{file_name}" if args.load_model == "default" else args.load_model
+		policy.load(policy_file)
 
 	replay_buffer = utils.ReplayBuffer(state_dim, action_dim)
 	
