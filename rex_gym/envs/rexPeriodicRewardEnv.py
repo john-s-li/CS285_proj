@@ -204,6 +204,7 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
 
         self.base_vel_curr_trans, self.base_vel_curr_rot = self.get_base_velocity()
         action = self._transform_action_to_motor_command(action)
+        action += rex_constants.INIT_POSES['stand_ol']
         self.rex.Step(action)
         self.base_vel_next_trans, self.base_vel_next_rot = self.get_base_velocity()
                             
@@ -372,19 +373,19 @@ class rexPeriodicRewardEnv(rex_gym_env.RexGymEnv):
             # the far the better..
             forward_reward = current_x
         # Cap the forward reward if a cap is set.
-        forward_reward = min(forward_reward, self._forward_reward_cap)
+        forward_reward = min(forward_reward, self._for1ward_reward_cap)
 
-        beta = 0.0
+        # beta = 0.0
 
         # changed np.exp(.) to -(1 - np.exp) bc error needs to be penalized, not rewarded
         # as forward reward increases, the errors need to play a larger role
-        naturalness = (-0.25 * (1 - np.exp(-orient_err - shoulder_err)) + 
-                       -0.25 * (1 - np.exp(-foot_penalties)) +  
-                       -0.10 * (1 - np.exp(-height_err))     +  
-                       -0.20 * (1 - np.exp(-x_vel_err))      +  
-                       -0.10 * (1 - np.exp(-y_vel_err))      +  
-                       -0.05  * (1 - np.exp(-accel_penalty))  +  
-                       -0.05 * (1 - np.exp(-energy_penalty)) )
+        naturalness = (0.25 * (1 - np.exp(-orient_err - shoulder_err)) + 
+                       0.25 * (1 - np.exp(-foot_penalties)) +  
+                       0.10 * (1 - np.exp(-height_err))     +  
+                       0.20 * (1 - np.exp(-x_vel_err))      +  
+                       0.10 * (1 - np.exp(-y_vel_err))      +  
+                       0.05  * (1 - np.exp(-accel_penalty))  +  
+                       0.05 * (1 - np.exp(-energy_penalty)) )
 
         reward = forward_reward*(1-naturalness)
 

@@ -214,7 +214,6 @@ class RexGymEnv(gym.Env):
         self._shake_weight = shake_weight
         self._distance_limit = distance_limit
         self._observation_noise_stdev = observation_noise_stdev
-        self._action_bound = 1
         self._pd_control_enabled = pd_control_enabled
         self._leg_model_enabled = leg_model_enabled
         self._accurate_motor_model_enabled = accurate_motor_model_enabled
@@ -289,6 +288,7 @@ class RexGymEnv(gym.Env):
             self.terrain.generate_terrain(self)
         observation_high = (self._get_observation_upper_bound() + OBSERVATION_EPS)
         observation_low = (self._get_observation_lower_bound() - OBSERVATION_EPS)
+        self._action_bound = np.pi/2
         action_dim = self.num_motors
         action_high = np.array([self._action_bound] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high)
