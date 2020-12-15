@@ -123,14 +123,10 @@ if __name__ == "__main__":
 		if t < args.start_timesteps:
 			action = env.action_space.sample()
 		else:
-			eps = 0.1 # epsilon greedy to help exploration
-			if np.random.uniform() <= eps:
-				action = env.action_space.sample()
-			else:
-				action = (
-					policy.select_action(np.array(state))
-					+ np.random.normal(0, max_action * args.expl_noise, size=action_dim)
-				).clip(-max_action, max_action)
+			action = (
+                policy.select_action(np.array(state))
+                + np.random.normal(0, max_action * args.expl_noise, size=action_dim)
+            ).clip(-max_action, max_action)
 
 		# Perform action
 		next_state, reward, done, _ = env.step(action) 
